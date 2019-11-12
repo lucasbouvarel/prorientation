@@ -6,8 +6,6 @@ declare let L;
 
 
 
-import * as Gp from 'geoportal-access-lib/dist/GpServices.js';
-
 @Component({
   selector: 'app-map',
   templateUrl: './map.page.html',
