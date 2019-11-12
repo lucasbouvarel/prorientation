@@ -10,8 +10,16 @@ export class HomePage {
 
   constructor(private router:Router) {}
 
-  go(){
-    this.router.navigate(['/map']);
+  navigateOrientation(){
+    this.router.navigate(['orientation/form']);
+  }
+
+  navigateTrail(){
+    this.router.navigate(['trail/form']);
+  }
+
+  navigatePerso(){
+    this.router.navigate(['perso']);
   }
 
 

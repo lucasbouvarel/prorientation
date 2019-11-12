@@ -12,14 +12,10 @@ declare let L;
   styleUrls: ['./map.page.scss'],
 })
 export class MapPage implements OnInit {
-  text="custom"
   constructor() {
 
   }
   //var mymap = L.map('mapid').setView([51.505, -0.09], 13);
-  change(e){
-    this.text=e;
-  }
 
   ngOnInit() {
 
