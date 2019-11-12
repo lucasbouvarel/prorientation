@@ -10,12 +10,13 @@ import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 
 import { AuthModule } from  './auth/auth.module';
+import { IonicStorageModule } from '@ionic/storage';
 
 
 @NgModule({
   declarations: [AppComponent],
   entryComponents: [],
-  imports: [BrowserModule, IonicModule.forRoot(), AppRoutingModule, AuthModule],
+  imports: [BrowserModule, IonicModule.forRoot(), AppRoutingModule, AuthModule, IonicStorageModule.forRoot()],
   providers: [
     StatusBar,
     SplashScreen,
