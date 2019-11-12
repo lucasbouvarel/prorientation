@@ -7,11 +7,9 @@ import { Router } from '@angular/router';
   styleUrls: ['home.page.scss'],
 })
 export class HomePage {
-  text="default text";
+
   constructor(private router:Router) {}
-  onChangeText(){
-    this.text="changed"
-  }
+
   go(){
     this.router.navigate(['/map']);
   }
