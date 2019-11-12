@@ -14,10 +14,8 @@ export class FormPage implements OnInit {
   ngOnInit() {
   }
 
-  difficulte: any;
 
   creerOrientation(form){
-    this.storage.set("difficulte", this.difficulte);
     this.router.navigateByUrl('orientation/map');
   }
 
