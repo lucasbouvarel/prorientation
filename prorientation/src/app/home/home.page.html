@@ -7,10 +7,26 @@
 </ion-header>
 
 <ion-content>
-  <div class="ion-padding">
-    The world is your oyster.
-    {{text}}
-    <ion-button (click)="onChangeText()"> Change Text </ion-button>
-    <ion-button (click)="go()"> Go </ion-button>
-  </div>
+  <ion-grid>
+    <ion-row>
+      <ion-col>
+        <ion-button (click)=navigateOrientation()>
+          <ion-icon name="compass"></ion-icon>
+          Course d'orientation
+        </ion-button>
+      </ion-col>
+      <ion-col>
+        <ion-button (click)=navigateTrail()>
+          <ion-icon name="md-body"></ion-icon>
+          Trail
+        </ion-button>
+      </ion-col>
+      <ion-col>
+        <ion-button (click)=navigatePerso()>
+          <ion-icon name="md-body"></ion-icon>
+          Espace personnel
+        </ion-button>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>

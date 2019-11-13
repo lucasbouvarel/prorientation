@@ -7,13 +7,19 @@ import { Router } from '@angular/router';
   styleUrls: ['home.page.scss'],
 })
 export class HomePage {
-  text="default text";
+
   constructor(private router:Router) {}
-  onChangeText(){
-    this.text="changed"
+
+  navigateOrientation(){
+    this.router.navigate(['orientation/form']);
   }
-  go(){
-    this.router.navigate(['/map']);
+
+  navigateTrail(){
+    this.router.navigate(['trail/form']);
+  }
+
+  navigatePerso(){
+    this.router.navigate(['perso']);
   }
 
 
