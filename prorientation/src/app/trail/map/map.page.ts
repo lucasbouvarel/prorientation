@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import 'leaflet';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
 import 'leaflet-routing-machine';
+import 'leaflet-layer-overpass';
 declare let L;
 
 
