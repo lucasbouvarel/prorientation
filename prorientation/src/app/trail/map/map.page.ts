@@ -66,16 +66,49 @@ export class MapPage implements OnInit {
    	    accessToken: 'pk.eyJ1IjoibHVjYXNib3V2YXJlbCIsImEiOiJjazJycHIwbXQwZGs3M25udmltaGg3eTFlIn0.XGIAxbBH8QGE1ZnmHUztMQ'
       }).addTo(testMap);
 
-      var arrayCoords = zeros([4, 2]);
+      var arrayCoords = zeros([12, 2]);
 
-      arrayCoords[0][0] = 45.763525;
-      arrayCoords[0][1] = 4.844971;
-      arrayCoords[1][0] = 45.765752;
-      arrayCoords[1][1] = 4.841538;
+      arrayCoords[0][0] = lat;
+      arrayCoords[0][1] = long;
+      arrayCoords[1][0] = 45.772371;
+      arrayCoords[1][1] = 4.865946;
       arrayCoords[2][0] = 45.781612;
       arrayCoords[2][1] = 4.881176;
-      arrayCoords[3][0] = 45.780460;
-      arrayCoords[3][1] = 4.873430;
+      arrayCoords[3][0] = 45.783816;
+      arrayCoords[3][1] = 4.872120;
+      arrayCoords[4][0] = 45.774956;
+      arrayCoords[4][1] = 4.877648;
+      arrayCoords[5][0] = 45.776370;
+      arrayCoords[5][1] = 4.872895;
+      arrayCoords[6][0] = 45.780380;
+      arrayCoords[6][1] = 4.866248;
+      arrayCoords[7][0] = 45.779944;
+      arrayCoords[7][1] = 4.888361;
+      arrayCoords[8][0] = 45.786152;
+      arrayCoords[8][1] = 4.876570;
+      arrayCoords[9][0] = 45.779589;
+      arrayCoords[9][1] = 4.859683;
+      arrayCoords[10][0] = 45.771271;
+      arrayCoords[10][1] = 4.885133;
+      arrayCoords[11][0] = 45.784126;
+      arrayCoords[11][1] = 4.865009;
+      /*arrayCoords[11][0] = 45.769342;
+      arrayCoords[11][1] = 4.896707;
+      arrayCoords[13][0] = 45.787324;
+      arrayCoords[13][1] = 4.882642;
+      /*arrayCoords[14][0] = 45.784035;
+      arrayCoords[14][1] = 4.873064;
+      arrayCoords[15][0] = 45.784202;
+      arrayCoords[15][1] = 4.865068;
+      arrayCoords[16][0] = 45.772343;
+      arrayCoords[16][1] = 4.866039;
+      arrayCoords[17][0] = 45.768562;
+      arrayCoords[17][1] = 4.884405;
+      arrayCoords[18][0] = 45.769362;
+      arrayCoords[18][1] = 4.896638;
+      arrayCoords[19][0] = 45.779623;
+      arrayCoords[19][1] = 4.859615;*/
+
 
       function getDistanceMatrix(arrayCoords){
         return new Promise(async function(resolve,reject){
@@ -162,10 +195,12 @@ export class MapPage implements OnInit {
             console.log(distances);
 
             var distancesResponse;
+            var target = 6000;
 
             var urlDistances = 'http://51.91.111.135:8080/';
             var formData = new FormData();
             formData.append('dist', distances.toString());
+            formData.append('distTarget', target.toString());
             var reqDistances = new XMLHttpRequest();
             reqDistances.responseType = "json";
             reqDistances.open('POST', urlDistances, true);
@@ -174,7 +209,8 @@ export class MapPage implements OnInit {
             reqDistances.addEventListener('readystatechange', function() {
               if(reqDistances.readyState === XMLHttpRequest.DONE) {
                 reqDistances.onload = function () {
-                  distancesResponse = reqDistances.response;
+                  var distancesResponse = reqDistances.response.orders;
+                  var eliminatedResponse = reqDistances.response.eliminated;
 
                   var intDistances = []
                   var j;
@@ -183,10 +219,16 @@ export class MapPage implements OnInit {
                     intDistances.push(integer)
                   }
 
+                  var intEliminated = []
+                  for(j=0;j < eliminatedResponse.length ; j++){
+                    var integer = parseInt(eliminatedResponse[j], 10);
+                    intEliminated.push(integer)
+                  }
+
                   if(distancesResponse === undefined){
                     reject("erreur");
                   }else{
-                    resolve(intDistances);
+                    resolve([intDistances,intEliminated]);
                   }
                 }
               }
@@ -199,17 +241,50 @@ export class MapPage implements OnInit {
         console.log("res");
         console.log(res);
 
+        var order = res[0];
+        console.log(order);
+        var eliminatedNodes = res[1];
+        console.log(eliminatedNodes);
+
 
         let options = { profile: 'mapbox/walking' };
 
+        var pointsWay = [];
+
+        var coordConservedNodes = zeros([order.length,2]);
+
+        var i;
+        var j;
+        var indexNodes = -1;
+        for(i=0; i < arrayCoords.length ;i++){
+          var bool = 0;
+          for(j=0; j < eliminatedNodes.length ;j++){
+            if(i == eliminatedNodes[j]){
+              bool = 1;
+            }
+          }
+          if(bool == 0){
+            indexNodes = indexNodes + 1;
+            coordConservedNodes[indexNodes][0] = arrayCoords[i][0]
+            coordConservedNodes[indexNodes][1] = arrayCoords[i][1]
+          }
+        }
+
+        console.log(coordConservedNodes);
+
+        for(i=0; i < coordConservedNodes.length ;i++){
+          for(j=0; j < coordConservedNodes.length ;j++){
+            if(j == order[i]){
+              pointsWay.push(L.latLng(coordConservedNodes[j][0], coordConservedNodes[j][1]))
+            }
+          }
+        }
+
+
+        console.log(pointsWay)
+
         var routeControl = L.Routing.control({
-          waypoints: [
-            L.latLng(arrayCoords[res[0]][0], arrayCoords[res[0]][1]),
-            L.latLng(arrayCoords[res[1]][0], arrayCoords[res[1]][1]),
-            L.latLng(arrayCoords[res[2]][0], arrayCoords[res[2]][1]),
-            L.latLng(arrayCoords[res[3]][0], arrayCoords[res[3]][1]),
-            L.latLng(arrayCoords[res[0]][0], arrayCoords[res[0]][1]),
-          ],
+          waypoints: pointsWay,
 
           router: new L.Routing.mapbox('pk.eyJ1IjoiYWRlam9uZ2hlIiwiYSI6ImNrMzl3eTFmeDAydTYzY21nZ3RoY3MwdTEifQ.vnvS6h87mJWeRuwjiWglrg', options),
 
