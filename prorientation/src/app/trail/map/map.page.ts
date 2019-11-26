@@ -35,7 +35,13 @@ export class MapPage implements OnInit {
       var lat=resp.coords.latitude
       var long=resp.coords.longitude
       var mymap = L.map('mapid').setView([lat, long], 13);
+      var testMap = L.map('mapid1').setView([lat, long], 13);
       mymap.locate({
+        watch:true,
+
+      });
+
+      testMap.locate({
         watch:true,
 
       });
@@ -53,6 +59,13 @@ export class MapPage implements OnInit {
    	    accessToken: 'pk.eyJ1IjoibHVjYXNib3V2YXJlbCIsImEiOiJjazJycHIwbXQwZGs3M25udmltaGg3eTFlIn0.XGIAxbBH8QGE1ZnmHUztMQ'
       }).addTo(mymap);
 
+      L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+  	    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+   	    maxZoom: 18,
+   	    id: 'mapbox.streets',
+   	    accessToken: 'pk.eyJ1IjoibHVjYXNib3V2YXJlbCIsImEiOiJjazJycHIwbXQwZGs3M25udmltaGg3eTFlIn0.XGIAxbBH8QGE1ZnmHUztMQ'
+      }).addTo(testMap);
+
       var arrayCoords = zeros([4, 2]);
 
       arrayCoords[0][0] = 45.763525;
@@ -64,70 +77,126 @@ export class MapPage implements OnInit {
       arrayCoords[3][0] = 45.780460;
       arrayCoords[3][1] = 4.873430;
 
-      function tsp(arrayCoords){
-
-        return new Promise( function(resolve,reject){
-
-          var urlCoords = '';
+      function getDistanceMatrix(arrayCoords){
+        return new Promise(async function(resolve,reject){
           var i;
+          var j;
+
+          var arrayDistances = [];
+
           for (i = 0; i < arrayCoords.length; i++) {
-            urlCoords += arrayCoords[i][0] + ',' + arrayCoords[i][1];
-            if(i != arrayCoords.length - 1){
-              urlCoords += ';'
+            for (j = 0; j < arrayCoords.length; j++) {
+              var routeControl = await getRouteControl(arrayCoords[i][0], arrayCoords[i][1], arrayCoords[j][0], arrayCoords[j][1]);
+              await getDistance(routeControl).then((res)=>{arrayDistances.push(res);});
             }
           }
 
-          var url = 'https://api.mapbox.com/directions-matrix/v1/mapbox/walking/' + urlCoords + '?annotations=distance&access_token=pk.eyJ1IjoiYWRlam9uZ2hlIiwiYSI6ImNrMzl3eTFmeDAydTYzY21nZ3RoY3MwdTEifQ.vnvS6h87mJWeRuwjiWglrg';
-          console.log(url);
+          if(arrayDistances === undefined){
+            reject("erreur");
+          }else{
+            resolve(arrayDistances);
+          }
+        });
+      }
 
-          var req = new XMLHttpRequest();
-          req.responseType = 'json';
-          req.open('GET', url, true);
-          req.send(null);
+      function getRouteControl(w,x,y,z){
+        return new Promise( function(resolve,reject){
 
-          var distancesResponse;
+          let options = { profile: 'mapbox/walking' };
 
-          req.addEventListener('readystatechange', function() {
-            if (req.readyState === XMLHttpRequest.DONE) {
-              req.onload = function () {
-                  var jsonResponse = req.response;
-                  var distances = jsonResponse.distances;
-                  var urlDistances = 'http://51.91.111.135:8080/';
+          var routeControl = L.Routing.control({
+            waypoints: [
+              L.latLng(w, x),
+              L.latLng(y, z)
+            ],
 
-                  var formData = new FormData();
-                  formData.append('dist', distances);
-                  var reqDistances = new XMLHttpRequest();
-                  reqDistances.responseType = "json";
-                  reqDistances.open('POST', urlDistances, true);
-                  reqDistances.send(formData);
+            router: new L.Routing.mapbox('pk.eyJ1IjoiYWRlam9uZ2hlIiwiYSI6ImNrMzl3eTFmeDAydTYzY21nZ3RoY3MwdTEifQ.vnvS6h87mJWeRuwjiWglrg', options),
 
-                  reqDistances.addEventListener('readystatechange', function() {
-                    if(reqDistances.readyState === XMLHttpRequest.DONE) {
-                      reqDistances.onload = function () {
-                        distancesResponse = reqDistances.response;
+            routeWhileDragging: true
+          }).addTo(testMap);
 
-                        var intDistances = []
-                        var j;
-                        for(j=0;j < distancesResponse.length ; j++){
-                          var integer = parseInt(distancesResponse[j], 10);
-                          intDistances.push(integer)
-                        }
+          if(routeControl === undefined){
+            reject("erreur");
+          }else{
+            resolve(routeControl);
+          }
+        });
+      }
 
-                        if(distancesResponse === undefined){
-                          reject("erreur");
-                        }else{
-                          resolve(intDistances);
-                        }
-                      }
-                    }
-                 });
+      function getDistance(routeControl){
+        return new Promise( function(resolve,reject){
+          routeControl.addEventListener('routesfound', function(e) {
+            var routes = e.routes;
+            var summary = routes[0].summary;
+            var dist = summary.totalDistance;
+
+            console.log(dist);
+
+            if(dist >= 0){
+              resolve(dist);
+            }else{
+              reject("erreur");
+            }
+          })
+        });
+      }
+
+      function tsp(arrayCoords){
+
+        return new Promise(async function(resolve,reject){
+
+          var matrixD = await getDistanceMatrix(arrayCoords).then((res)=>{
+
+            var distances = zeros([arrayCoords.length, arrayCoords.length]);
+
+            var k;
+            var l;
+            var index = 0;
+            for (k = 0; k < arrayCoords.length; k++) {
+              for (l = 0; l < arrayCoords.length; l++) {
+                distances[k][l] = res[index];
+                index = index +1;
               }
             }
+
+            console.log(distances);
+
+            var distancesResponse;
+
+            var urlDistances = 'http://51.91.111.135:8080/';
+            var formData = new FormData();
+            formData.append('dist', distances.toString());
+            var reqDistances = new XMLHttpRequest();
+            reqDistances.responseType = "json";
+            reqDistances.open('POST', urlDistances, true);
+            reqDistances.send(formData);
+
+            reqDistances.addEventListener('readystatechange', function() {
+              if(reqDistances.readyState === XMLHttpRequest.DONE) {
+                reqDistances.onload = function () {
+                  distancesResponse = reqDistances.response;
+
+                  var intDistances = []
+                  var j;
+                  for(j=0;j < distancesResponse.length ; j++){
+                    var integer = parseInt(distancesResponse[j], 10);
+                    intDistances.push(integer)
+                  }
+
+                  if(distancesResponse === undefined){
+                    reject("erreur");
+                  }else{
+                    resolve(intDistances);
+                  }
+                }
+              }
+           });
           });
         });
       }
 
       tsp(arrayCoords).then((res)=>{
+        console.log("res");
         console.log(res);
 
 
