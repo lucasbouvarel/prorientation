@@ -16,7 +16,6 @@ export class MapPage implements OnInit {
   constructor() {
 
   }
-  //var mymap = L.map('mapid').setView([51.505, -0.09], 13);
 
   ngOnInit() {
 
@@ -66,9 +65,9 @@ export class MapPage implements OnInit {
    	    accessToken: 'pk.eyJ1IjoibHVjYXNib3V2YXJlbCIsImEiOiJjazJycHIwbXQwZGs3M25udmltaGg3eTFlIn0.XGIAxbBH8QGE1ZnmHUztMQ'
       }).addTo(testMap);
 
-      var arrayCoords = zeros([12, 2]);
+      /*var arrayCoords = zeros([12, 2]);*/
 
-      arrayCoords[0][0] = lat;
+      /*arrayCoords[0][0] = lat;
       arrayCoords[0][1] = long;
       arrayCoords[1][0] = 45.772371;
       arrayCoords[1][1] = 4.865946;
@@ -80,8 +79,8 @@ export class MapPage implements OnInit {
       arrayCoords[4][1] = 4.877648;
       arrayCoords[5][0] = 45.776370;
       arrayCoords[5][1] = 4.872895;
-      arrayCoords[6][0] = 45.780380;
-      arrayCoords[6][1] = 4.866248;
+      arrayCoords[6][0] = 45.776492;
+      arrayCoords[6][1] = 4.864896;
       arrayCoords[7][0] = 45.779944;
       arrayCoords[7][1] = 4.888361;
       arrayCoords[8][0] = 45.786152;
@@ -91,24 +90,101 @@ export class MapPage implements OnInit {
       arrayCoords[10][0] = 45.771271;
       arrayCoords[10][1] = 4.885133;
       arrayCoords[11][0] = 45.784126;
-      arrayCoords[11][1] = 4.865009;
-      /*arrayCoords[11][0] = 45.769342;
-      arrayCoords[11][1] = 4.896707;
-      arrayCoords[13][0] = 45.787324;
-      arrayCoords[13][1] = 4.882642;
-      /*arrayCoords[14][0] = 45.784035;
-      arrayCoords[14][1] = 4.873064;
-      arrayCoords[15][0] = 45.784202;
-      arrayCoords[15][1] = 4.865068;
-      arrayCoords[16][0] = 45.772343;
-      arrayCoords[16][1] = 4.866039;
-      arrayCoords[17][0] = 45.768562;
-      arrayCoords[17][1] = 4.884405;
-      arrayCoords[18][0] = 45.769362;
-      arrayCoords[18][1] = 4.896638;
-      arrayCoords[19][0] = 45.779623;
-      arrayCoords[19][1] = 4.859615;*/
+      arrayCoords[11][1] = 4.865009;*/
 
+      var target = 6000;
+
+      function checkDistances(x,y,array){
+        return new Promise(async function(resolve,reject){
+          var boolean = 0;
+          for(var j=1;j<array.length;j++){
+
+            await computeEuclideanDistance(x,array[j][0],y,array[j][1]).then((dist)=>{
+
+              if(dist <0.01){
+                boolean = 1
+              }
+            });
+          }
+          if(boolean === undefined){
+            reject("erreur");
+          }else{
+            resolve(boolean);
+          }
+        });
+      }
+
+      function computeEuclideanDistance(w,x,y,z){
+        return new Promise(async function(resolve,reject){
+
+          var dist = Math.sqrt(Math.pow(w - x,2)+ Math.pow(y - z,2));
+          if(dist === 0){
+            reject("erreur");
+          }else{
+            resolve(dist);
+          }
+        });
+      }
+
+      function getArrayCoords(){
+        return new Promise(async function(resolve,reject){
+          var arrayCoords = new Array();
+
+          var marge = 0.02;
+
+          var latM = lat-marge
+          var latP = lat+marge
+          var longM = long-marge
+          var longP = long+marge
+
+          var urlInterest = 'https://www.overpass-api.de/api/interpreter?data=[out:json];node[tourism]('+ latM + ',' + longM + ',' + latP + ',' + longP + ');out%20meta;';
+
+          console.log(urlInterest);
+          var reqInterest = new XMLHttpRequest();
+          reqInterest.responseType = "json";
+          reqInterest.open('GET', urlInterest, true);
+          reqInterest.send();
+
+          reqInterest.addEventListener('readystatechange', function() {
+            if(reqInterest.readyState === XMLHttpRequest.DONE) {
+              reqInterest.onload = async function () {
+                var elem = reqInterest.response.elements;
+
+                for(var i=0;i<elem.length;i++){
+                  arrayCoords[i] = new Array();
+                  arrayCoords[i][0]=elem[i].lat;
+                  arrayCoords[i][1]=elem[i].lon;
+                }
+
+                var arrayCoords1 = new Array();
+                arrayCoords1[0] = new Array();
+                arrayCoords1[0][0]=lat;
+                arrayCoords1[0][1]=long;
+
+                var ind = 1
+                var sizeArrayCoords = 0
+                for(var i=1;i<elem.length;i++){
+
+                  await checkDistances(arrayCoords[i][0], arrayCoords[i][1], arrayCoords1).then((boolean)=>{
+                    if(boolean === 0){
+                      arrayCoords1[ind] = new Array();
+                      arrayCoords1[ind][0]= arrayCoords[i][0];
+                      arrayCoords1[ind][1]= arrayCoords[i][1];
+                      ind = ind +1;
+                    }
+                  });
+                }
+                console.log(arrayCoords1)
+                if(arrayCoords1 === undefined){
+                  reject("erreur");
+                }else{
+                  resolve(arrayCoords1);
+                }
+              }
+            }
+          });
+        });
+      }
 
       function getDistanceMatrix(arrayCoords){
         return new Promise(async function(resolve,reject){
@@ -163,8 +239,6 @@ export class MapPage implements OnInit {
             var summary = routes[0].summary;
             var dist = summary.totalDistance;
 
-            console.log(dist);
-
             if(dist >= 0){
               resolve(dist);
             }else{
@@ -174,70 +248,72 @@ export class MapPage implements OnInit {
         });
       }
 
-      function tsp(arrayCoords){
+      function tsp(){
 
         return new Promise(async function(resolve,reject){
+          await getArrayCoords().then(async (arrayCoords) => {
 
-          var matrixD = await getDistanceMatrix(arrayCoords).then((res)=>{
+            await getDistanceMatrix(arrayCoords).then((res)=>{
 
-            var distances = zeros([arrayCoords.length, arrayCoords.length]);
+              var distances = zeros([arrayCoords.length, arrayCoords.length]);
 
-            var k;
-            var l;
-            var index = 0;
-            for (k = 0; k < arrayCoords.length; k++) {
-              for (l = 0; l < arrayCoords.length; l++) {
-                distances[k][l] = res[index];
-                index = index +1;
-              }
-            }
-
-            console.log(distances);
-
-            var distancesResponse;
-            var target = 6000;
-
-            var urlDistances = 'http://51.91.111.135:8080/';
-            var formData = new FormData();
-            formData.append('dist', distances.toString());
-            formData.append('distTarget', target.toString());
-            var reqDistances = new XMLHttpRequest();
-            reqDistances.responseType = "json";
-            reqDistances.open('POST', urlDistances, true);
-            reqDistances.send(formData);
-
-            reqDistances.addEventListener('readystatechange', function() {
-              if(reqDistances.readyState === XMLHttpRequest.DONE) {
-                reqDistances.onload = function () {
-                  var distancesResponse = reqDistances.response.orders;
-                  var eliminatedResponse = reqDistances.response.eliminated;
-
-                  var intDistances = []
-                  var j;
-                  for(j=0;j < distancesResponse.length ; j++){
-                    var integer = parseInt(distancesResponse[j], 10);
-                    intDistances.push(integer)
-                  }
-
-                  var intEliminated = []
-                  for(j=0;j < eliminatedResponse.length ; j++){
-                    var integer = parseInt(eliminatedResponse[j], 10);
-                    intEliminated.push(integer)
-                  }
-
-                  if(distancesResponse === undefined){
-                    reject("erreur");
-                  }else{
-                    resolve([intDistances,intEliminated]);
-                  }
+              var k;
+              var l;
+              var index = 0;
+              for (k = 0; k < arrayCoords.length; k++) {
+                for (l = 0; l < arrayCoords.length; l++) {
+                  distances[k][l] = res[index];
+                  index = index +1;
                 }
               }
-           });
+
+              console.log("distances");
+              console.log(distances);
+
+              var distancesResponse;
+
+              var urlDistances = 'http://51.91.111.135:8080/';
+              var formData = new FormData();
+              formData.append('dist', distances.toString());
+              formData.append('distTarget', target.toString());
+              var reqDistances = new XMLHttpRequest();
+              reqDistances.responseType = "json";
+              reqDistances.open('POST', urlDistances, true);
+              reqDistances.send(formData);
+
+              reqDistances.addEventListener('readystatechange', function() {
+                if(reqDistances.readyState === XMLHttpRequest.DONE) {
+                  reqDistances.onload = function () {
+                    var distancesResponse = reqDistances.response.orders;
+                    var eliminatedResponse = reqDistances.response.eliminated;
+
+                    var intDistances = []
+                    var j;
+                    for(j=0;j < distancesResponse.length ; j++){
+                      var integer = parseInt(distancesResponse[j], 10);
+                      intDistances.push(integer)
+                    }
+
+                    var intEliminated = []
+                    for(j=0;j < eliminatedResponse.length ; j++){
+                      var integer = parseInt(eliminatedResponse[j], 10);
+                      intEliminated.push(integer)
+                    }
+
+                    if(distancesResponse === undefined){
+                      reject("erreur");
+                    }else{
+                      resolve([intDistances,intEliminated,arrayCoords]);
+                    }
+                  }
+                }
+             });
+            });
           });
         });
       }
 
-      tsp(arrayCoords).then((res)=>{
+      tsp().then((res)=>{
         console.log("res");
         console.log(res);
 
@@ -245,6 +321,8 @@ export class MapPage implements OnInit {
         console.log(order);
         var eliminatedNodes = res[1];
         console.log(eliminatedNodes);
+        var arrayCoords = res[2];
+        console.log(arrayCoords);
 
 
         let options = { profile: 'mapbox/walking' };

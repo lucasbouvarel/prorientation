@@ -32,3 +32,27 @@
  <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js"
    integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og=="
    crossorigin=""></script>
+
+   <!-- The core Firebase JS SDK is always required and must be listed first -->
+   <script src="https://www.gstatic.com/firebasejs/7.5.0/firebase-app.js"></script>
+
+   <!-- TODO: Add SDKs for Firebase products that you want to use
+        https://firebase.google.com/docs/web/setup#available-libraries -->
+   <script src="https://www.gstatic.com/firebasejs/7.5.0/firebase-analytics.js"></script>
+
+   <script>
+     // Your web app's Firebase configuration
+     var firebaseConfig = {
+       apiKey: "AIzaSyB2B9rpDGKfcCYqg69DiTebPvSbTny1QI0",
+       authDomain: "prorientation-320b0.firebaseapp.com",
+       databaseURL: "https://prorientation-320b0.firebaseio.com",
+       projectId: "prorientation-320b0",
+       storageBucket: "prorientation-320b0.appspot.com",
+       messagingSenderId: "90889340296",
+       appId: "1:90889340296:web:dba305bb3ca70e2e65663d",
+       measurementId: "G-HVDELBKJP3"
+     };
+     // Initialize Firebase
+     firebase.initializeApp(firebaseConfig);
+     firebase.analytics();
+   </script>
