@@ -3,8 +3,18 @@
 // The list of file replacements can be found in `angular.json`.
 
 export const environment = {
-  production: false
+ production: false,
+ firebase: {
+   apiKey: "AIzaSyB2B9rpDGKfcCYqg69DiTebPvSbTny1QI0",
+   authDomain: "prorientation-320b0.firebaseapp.com",
+   databaseURL: "https://prorientation-320b0.firebaseio.com",
+   projectId: "prorientation-320b0",
+   storageBucket: "prorientation-320b0.appspot.com",
+   messagingSenderId: "90889340296"
+ }
 };
+
+
 
 /*
  * For easier debugging in development mode, you can import the following file

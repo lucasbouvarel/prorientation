@@ -1,7 +1,7 @@
 <ion-header>
   <ion-toolbar>
     <ion-title>
-      Ionic Blank
+       Home Page
     </ion-title>
   </ion-toolbar>
 </ion-header>
@@ -9,22 +9,24 @@
 <ion-content>
   <ion-grid>
     <ion-row>
-      <ion-col>
-        <ion-button (click)=navigateOrientation()>
+        <ion-col class="ion-text-center">
+            <ion-button round (click)=navigatePerso()>
+              <ion-icon name="md-body"></ion-icon>
+              Espace personnel
+            </ion-button>
+        </ion-col>
+    </ion-row>
+    <ion-row class="ion-text-center">
+      <ion-col >
+        <ion-button round (click)=navigateOrientation()>
           <ion-icon name="compass"></ion-icon>
           Course d'orientation
         </ion-button>
       </ion-col>
       <ion-col>
-        <ion-button (click)=navigateTrail()>
+        <ion-button round (click)=navigateTrail()>
           <ion-icon name="md-body"></ion-icon>
           Trail
-        </ion-button>
-      </ion-col>
-      <ion-col>
-        <ion-button (click)=navigatePerso()>
-          <ion-icon name="md-body"></ion-icon>
-          Espace personnel
         </ion-button>
       </ion-col>
     </ion-row>
