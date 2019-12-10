@@ -4,6 +4,7 @@ import { Geolocation } from '@ionic-native/geolocation/ngx';
 import 'leaflet-routing-machine';
 declare let L;
 import { mapbox } from 'lrm-mapbox';
+import { Storage } from '@ionic/storage';
 
 
 
@@ -13,7 +14,7 @@ import { mapbox } from 'lrm-mapbox';
   styleUrls: ['./map.page.scss'],
 })
 export class MapPage implements OnInit {
-  constructor() {
+  constructor(private storage: Storage) {
 
   }
 
@@ -30,7 +31,7 @@ export class MapPage implements OnInit {
     }
 
     var object = new Geolocation();
-    object.getCurrentPosition().then((resp) => {
+    object.getCurrentPosition().then(async (resp) => {
       var lat=resp.coords.latitude
       var long=resp.coords.longitude
       var mymap = L.map('mapid').setView([lat, long], 13);
@@ -92,16 +93,22 @@ export class MapPage implements OnInit {
       arrayCoords[11][0] = 45.784126;
       arrayCoords[11][1] = 4.865009;*/
 
-      var target = 6000;
+      var target = 1;
 
-      function checkDistances(x,y,array){
+      await this.storage.get('distanceCoursePied').then((res) =>{
+        target = res;
+      });
+      console.log(typeof target);
+
+
+      function checkDistances(x,y,array,thresh){
         return new Promise(async function(resolve,reject){
           var boolean = 0;
           for(var j=1;j<array.length;j++){
 
             await computeEuclideanDistance(x,array[j][0],y,array[j][1]).then((dist)=>{
 
-              if(dist <0.01){
+              if(dist < thresh){
                 boolean = 1
               }
             });
@@ -130,7 +137,21 @@ export class MapPage implements OnInit {
         return new Promise(async function(resolve,reject){
           var arrayCoords = new Array();
 
-          var marge = 0.02;
+          var marge = 0.0;
+
+          if(target <= 2){
+            marge = 0.009;
+          }else if(target > 2 && target <= 4 ){
+            marge = 0.01;
+          }else if(target > 4 && target <= 6 ){
+            marge = 0.02;
+          }else if(target > 6 && target <= 8 ){
+            marge = 0.03;
+          }else if(target > 8 && target <= 10 ){
+            marge = 0.04;
+          }else if(target > 10){
+            marge = 0.05;
+          }
 
           var latM = lat-marge
           var latP = lat+marge
@@ -156,16 +177,20 @@ export class MapPage implements OnInit {
                   arrayCoords[i][1]=elem[i].lon;
                 }
 
+                var targetNumberNodes = 10;
+                var margeNumberNodes = 2;
+                var numberNodes = 0;
+                var thresh = 0.05;
+
                 var arrayCoords1 = new Array();
                 arrayCoords1[0] = new Array();
                 arrayCoords1[0][0]=lat;
                 arrayCoords1[0][1]=long;
 
                 var ind = 1
-                var sizeArrayCoords = 0
                 for(var i=1;i<elem.length;i++){
 
-                  await checkDistances(arrayCoords[i][0], arrayCoords[i][1], arrayCoords1).then((boolean)=>{
+                  await checkDistances(arrayCoords[i][0], arrayCoords[i][1], arrayCoords1, thresh).then((boolean)=>{
                     if(boolean === 0){
                       arrayCoords1[ind] = new Array();
                       arrayCoords1[ind][0]= arrayCoords[i][0];
@@ -174,11 +199,43 @@ export class MapPage implements OnInit {
                     }
                   });
                 }
-                console.log(arrayCoords1)
+
+                var numberNodes = ind;
+                console.log(numberNodes);
+
+                while(numberNodes > targetNumberNodes + margeNumberNodes || numberNodes < targetNumberNodes - margeNumberNodes){
+
+                  if(numberNodes > targetNumberNodes + margeNumberNodes){
+                    thresh = thresh + 0.001
+                  }else if(numberNodes < targetNumberNodes - margeNumberNodes){
+                    thresh = thresh - 0.001
+                  }
+                  arrayCoords1 = new Array();
+                  arrayCoords1[0] = new Array();
+                  arrayCoords1[0][0]=lat;
+                  arrayCoords1[0][1]=long;
+
+                  var ind = 1
+                  for(var i=1;i<elem.length;i++){
+
+                    await checkDistances(arrayCoords[i][0], arrayCoords[i][1], arrayCoords1, thresh).then((boolean)=>{
+                      if(boolean === 0){
+                        arrayCoords1[ind] = new Array();
+                        arrayCoords1[ind][0]= arrayCoords[i][0];
+                        arrayCoords1[ind][1]= arrayCoords[i][1];
+                        ind = ind +1;
+                      }
+                    });
+                  }
+
+                  numberNodes = ind;
+                  console.log(numberNodes);
+                }
+
                 if(arrayCoords1 === undefined){
                   reject("erreur");
                 }else{
-                  resolve(arrayCoords1);
+                  resolve([arrayCoords1,arrayCoords1.length]);
                 }
               }
             }
@@ -251,24 +308,24 @@ export class MapPage implements OnInit {
       function tsp(){
 
         return new Promise(async function(resolve,reject){
-          await getArrayCoords().then(async (arrayCoords) => {
+          await getArrayCoords().then(async (resArrayCoords) => {
+
+            var arrayCoords = resArrayCoords[0];
+            var arrayCoordsLength = resArrayCoords[1];
 
             await getDistanceMatrix(arrayCoords).then((res)=>{
 
-              var distances = zeros([arrayCoords.length, arrayCoords.length]);
+              var distances = zeros([arrayCoordsLength, arrayCoordsLength]);
 
               var k;
               var l;
               var index = 0;
-              for (k = 0; k < arrayCoords.length; k++) {
-                for (l = 0; l < arrayCoords.length; l++) {
+              for (k = 0; k < arrayCoordsLength; k++) {
+                for (l = 0; l < arrayCoordsLength; l++) {
                   distances[k][l] = res[index];
                   index = index +1;
                 }
               }
-
-              console.log("distances");
-              console.log(distances);
 
               var distancesResponse;
 
@@ -314,16 +371,10 @@ export class MapPage implements OnInit {
       }
 
       tsp().then((res)=>{
-        console.log("res");
-        console.log(res);
 
         var order = res[0];
-        console.log(order);
         var eliminatedNodes = res[1];
-        console.log(eliminatedNodes);
         var arrayCoords = res[2];
-        console.log(arrayCoords);
-
 
         let options = { profile: 'mapbox/walking' };
 
@@ -348,8 +399,6 @@ export class MapPage implements OnInit {
           }
         }
 
-        console.log(coordConservedNodes);
-
         for(i=0; i < coordConservedNodes.length ;i++){
           for(j=0; j < coordConservedNodes.length ;j++){
             if(j == order[i]){
@@ -357,9 +406,6 @@ export class MapPage implements OnInit {
             }
           }
         }
-
-
-        console.log(pointsWay)
 
         var routeControl = L.Routing.control({
           waypoints: pointsWay,

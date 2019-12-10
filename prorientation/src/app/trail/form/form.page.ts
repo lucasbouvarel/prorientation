@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from  "@angular/router";
 import { Storage } from '@ionic/storage';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-form',
@@ -9,12 +10,15 @@ import { Storage } from '@ionic/storage';
 })
 export class FormPage implements OnInit {
 
+  distance: number = 0;
+
   constructor(private storage: Storage, private  router:  Router) { }
 
   ngOnInit() {
   }
 
-  creerTrail(form){
+  async creerTrail(form){
+    await this.storage.set(`distanceCoursePied`,form.value.distance);
     this.router.navigateByUrl('trail/map');
   }
 
