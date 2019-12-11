@@ -13,6 +13,33 @@
           <ion-list-header>
             Navigate
           </ion-list-header>
+          
+           <ion-menu-toggle *ngIf="hideButton == false" autoHide="false">
+            <ion-item>
+                <button (click)="enableShowForm()">Start a run</button>
+              </ion-item>
+            </ion-menu-toggle>
+
+            <form [(ngModel)]="formData" #distanceForm="ngForm" *ngIf="hideForm == false" (ngSubmit)="onClickSubmit(distanceForm)">
+                <ion-list>
+                  <ion-item>
+                    <ion-label position="stacked" color="primary">enter a distance</ion-label>
+                    <ion-input name="distance" type="text" required [(ngModel)]="distance" placeholder="distance" [ngModelOptions]="{standalone: true}"></ion-input>
+                  </ion-item>
+                </ion-list>
+            
+                <ion-input type = "submit" value = "start run"></ion-input>
+              </form>
+
+          <ion-menu-toggle autoHide="false">
+            <ion-item [routerLink]="route" routerLinkActive="active" routerDirection="root" detail="false">
+                <ion-icon slot="start" [name]="map"></ion-icon>
+                <ion-label>
+                  Trail
+                </ion-label>
+            </ion-item>
+          </ion-menu-toggle>
+
           <ion-menu-toggle autoHide="false" *ngFor="let p of appPages; let i = index">
             <ion-item [routerLink]="p.url" routerLinkActive="active" routerDirection="root" detail="false">
               <ion-icon slot="start" [name]="p.icon"></ion-icon>
@@ -28,7 +55,6 @@
           <ion-list-header>
             Account
           </ion-list-header>
-
           <ion-menu-toggle autoHide="false">
             <ion-item routerLink="/account" routerLinkActive="active" routerDirection="root" detail="false">
               <ion-icon slot="start" name="person"></ion-icon>
@@ -38,14 +64,7 @@
             </ion-item>
           </ion-menu-toggle>
 
-          <ion-menu-toggle autoHide="false">
-            <ion-item routerLink="/support" routerLinkActive="active" routerDirection="root" detail="false">
-              <ion-icon slot="start" name="help"></ion-icon>
-              <ion-label>
-                Support
-              </ion-label>
-            </ion-item>
-          </ion-menu-toggle>
+         
 
           <ion-menu-toggle autoHide="false">
             <ion-item button (click)="logout()" detail="false">
@@ -72,14 +91,7 @@
             </ion-item>
           </ion-menu-toggle>
 
-          <ion-menu-toggle autoHide="false">
-            <ion-item routerLink="/support" routerLinkActive="active" routerDirection="root" detail="false">
-              <ion-icon slot="start" name="help"></ion-icon>
-              <ion-label>
-                Support
-              </ion-label>
-            </ion-item>
-          </ion-menu-toggle>
+        
 
           <ion-menu-toggle autoHide="false">
             <ion-item routerLink="/signup" routerLinkActive="active" routerDirection="root" detail="false">
@@ -91,17 +103,6 @@
           </ion-menu-toggle>
         </ion-list>
 
-        <ion-list lines="none">
-          <ion-list-header>
-            Tutorial
-          </ion-list-header>
-          <ion-menu-toggle autoHide="false">
-            <ion-item button (click)="openTutorial()" detail="false">
-              <ion-icon slot="start" name="hammer"></ion-icon>
-              <ion-label>Show Tutorial</ion-label>
-            </ion-item>
-          </ion-menu-toggle>
-        </ion-list>
 
         <ion-list>
           <ion-item>

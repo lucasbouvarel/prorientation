@@ -1,6 +1,7 @@
 import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { SwUpdate } from '@angular/service-worker';
+import { NgForm, FormGroup, FormControl } from '@angular/forms';
 
 import { MenuController, Platform, ToastController } from '@ionic/angular';
 
@@ -19,30 +20,15 @@ import { UserData } from './providers/user-data';
 })
 
 export class AppComponent implements OnInit {
-  appPages = [
-    {
-      title: 'Trail',
-      url: '/app/tabs/Trail',
-      icon: 'calendar'
-    },
-    {
-      title: 'Course d\'orientation',
-      url: '/app/tabs/Orientation',
-      icon: 'contacts'
-    },
-    {
-      title: 'Map',
-      url: '/app/tabs/',
-      icon: 'map'
-    },
-    {
-      title: 'Personal Space',
-      url: '/app/tabs/UserSpace',
-      icon: 'information-circle'
-    }
-  ];
+
   loggedIn = false;
   dark = false;
+  hideForm = true;
+  hideButton = false;
+  distanceSubmit = false; 
+  target = '5000'; 
+  dataForm : string;
+  distance  = new FormControl();
 
   constructor(
     private menu: MenuController,
@@ -54,11 +40,14 @@ export class AppComponent implements OnInit {
     private userData: UserData,
     private swUpdate: SwUpdate,
     private toastCtrl: ToastController,
+    private activatedRoute : ActivatedRoute
   ) {
     this.initializeApp();
   }
 
   async ngOnInit() {
+
+
     this.checkLoginStatus();
     this.listenForLoginEvents();
 
@@ -98,6 +87,8 @@ export class AppComponent implements OnInit {
     }, 300);
   }
 
+
+
   listenForLoginEvents() {
     window.addEventListener('user:login', () => {
       this.updateLoggedInStatus(true);
@@ -123,4 +114,44 @@ export class AppComponent implements OnInit {
     this.storage.set('ion_did_tutorial', false);
     this.router.navigateByUrl('/tutorial');
   }
+
+  enableShowForm = () => {
+    this.hideButton = true;
+    this.hideForm = false;
+  }
+
+  onClickSubmit(form : NgForm) {
+    this.distanceSubmit= true;
+    console.log(form.value);
+    this.target =  form.value;
+    console.log('target : ',this.target);
+    var url = '/app/tabs/trail/'+this.target;
+    this.router.navigateByUrl(url);
+    
+  }
+
+  route = ['/app/tabs/Trail'];
+
+  appPages = [
+    {
+      title: 'orientation',
+      url: '/app/tabs/Orientation',
+      icon: 'contacts'
+    },
+    {
+      title: 'Map',
+      url: '/app/tabs/',
+      icon: 'map'
+    },
+    {
+      title: 'Personal Space',
+      url: '/app/tabs/UserSpace',
+      icon: 'information-circle'
+    },
+    {
+      title: 'Schedule',
+      url: '/app/tabs/schedule',
+      icon: 'information-circle'
+    }
+  ];
 }

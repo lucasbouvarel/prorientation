@@ -166,7 +166,7 @@ export class MapService {
   getConnection() {
     return new Promise(async function (resolve, reject) {
 
-      var url = 'http://127.0.0.1:8080/'
+      var url = 'http://51.91.111.135:8080/'
       var reqConnection = new XMLHttpRequest();
 
       var formData = new FormData();
@@ -248,7 +248,7 @@ export class MapService {
           console.log("get ready to start tsp");
           console.log(distances);
 
-          var urlDistances = 'http://127.0.0.1:8080/';
+          var urlDistances = 'http://51.91.111.135:8080/';
           var formData = new FormData();
           formData.append('dist', distances.toString());
           formData.append('distTarget', target.toString());

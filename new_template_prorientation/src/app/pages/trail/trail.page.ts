@@ -1,4 +1,4 @@
-import { Component, OnInit , AfterViewInit} from '@angular/core';
+import { Component, OnInit} from '@angular/core';
 import 'leaflet';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
 import 'leaflet-routing-machine';
@@ -6,6 +6,7 @@ declare let L;
 import { mapbox } from 'lrm-mapbox';
 import { MapService } from '../../providers/map.service';
 import { cpus } from 'os';
+import { ActivatedRoute } from '@angular/router'; 
 
 
 @Component({
@@ -13,17 +14,25 @@ import { cpus } from 'os';
   templateUrl: './trail.page.html',
   styleUrls: ['./trail.page.scss'],
 })
-export class TrailPage implements AfterViewInit {
 
-  constructor(private mapService : MapService) {}
+export class TrailPage implements OnInit {
 
-  ngAfterViewInit() {
+  constructor(
+    private mapService : MapService, 
+    private route : ActivatedRoute
+    ) {
+      this.route.params.subscribe((params)=> {
+        console.log(params);
+      })
+    }
 
-
+  ngOnInit() {
+    
     var object = new Geolocation();
     object.getCurrentPosition().then((resp) => {
       var lat=resp.coords.latitude
       var long=resp.coords.longitude
+      console.log(lat,long)
       var mymap = L.map('mapid').setView([lat, long], 13);
       var testMap = L.map('mapid1').setView([lat, long], 13);
       this.mapService.testMap = testMap;
@@ -127,3 +136,7 @@ export class TrailPage implements AfterViewInit {
   }
 
 }
+
+
+
+
