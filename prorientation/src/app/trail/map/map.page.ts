@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import 'leaflet';
 import { Geolocation } from '@ionic-native/geolocation/ngx';
 import 'leaflet-routing-machine';
-import 'leaflet-overpass-layer';
+import 'leaflet-layer-overpass';
 declare let L;
 declare var require: any;
 import * as request from "request-promise"
@@ -14,7 +14,7 @@ import * as request from "request-promise"
 })
 export class MapPage implements OnInit {
   constructor() {
-
+  
   }
   //var mymap = L.map('mapid').setView([51.505, -0.09], 13);
 
@@ -94,7 +94,8 @@ export class MapPage implements OnInit {
           position: 'topright',
           minZoomMessageNoLayer: "no layer assigned",
           minZoomMessage: "current Zoom-Level: CURRENTZOOM all data at Level: MINZOOMLEVEL"
-        }
+        },
+        afterRequest: function(data) {console.log(data.elements)},
       });
       mymap.addLayer(opl);
       //L.Control.Geocoder.nominatim();

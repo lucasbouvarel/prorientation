@@ -31,6 +31,7 @@
     "geoportal-access-lib": "^2.1.6",
     "geoportal-extensions-leaflet": "^2.1.5",
     "geoportal-sdk": "^1.3.0",
+    "gulp": "^4.0.2",
     "leaflet": "^1.5.1",
     "leaflet-overpass-layer": "^2.8.3",
     "leaflet-routing-machine": "^3.2.12",
